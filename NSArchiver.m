@@ -5,9 +5,12 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
-#import "NSArchiver.h"
+
+#import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #include <string.h>
+
+#import "NSArchiver.h"
 
 #define NSUnimplementedMethod() \
 NSLog(@"Method %s is not implemented!", __FUNCTION__)
@@ -167,16 +170,16 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
     }
 
     //NSLog(@"cString=%s", cString);
-    string = [NSString stringWithCString:cString];
+    string = [NSString stringWithUTF8String:cString];
     //NSLog(@"string=%@", string);
 
-    if ((lookup = NSHashGet(_cStrings, string)) != nil) {
+    if ((lookup = [_cStrings member:string]) != nil) {
         [self _appendReference:lookup];
     } else {
-        NSHashInsert(_cStrings, string);
+        [_cStrings addObject:string];
 
         [self _appendReference:string];
-        [self _appendCStringBytes:[string cString]];
+        [self _appendCStringBytes:[string UTF8String]];
     }
 }
 
@@ -184,16 +187,17 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 - (void)_appendClassVersion:(Class)class
 {
     if (class == [NSObject class]) {
-        [self _appendWordFour:0];
+        // this is a ref, it can be 8 or 4 bytes depending on arch.
+        [self _appendReference:(void *)0];
         return;
     }
     
     [self _appendReference:class];
 
-    if (NSHashGet(_classes, class) == NULL)
+    if ([_classes member:class] == NULL)
     {
-        NSHashInsert(_classes, class);
-        [self _appendCString:[NSStringFromClass(class) cString]];
+        [_classes addObject:class];
+        [self _appendCString:[NSStringFromClass(class) UTF8String]];
         [self _appendWordFour:[class version]];
         [self _appendClassVersion:[class superclass]];
     }
@@ -207,25 +211,25 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
             //NSLog(@"%@ conditional=%s", NSStringFromClass([object class]), conditional ? "YES" : "NO");
 
             if (!conditional) {
-                if (NSHashGet(_conditionals, object) == NULL) {
-                    NSHashInsert(_conditionals, object);
+                if ([_conditionals member:object] == NULL) {
+                    [_conditionals addObject:object];
                     [object encodeWithCoder:self];
                 }
             }
         }
     } else {
-        if (conditional && (NSHashGet(_conditionals, object) == NULL)) {
+        if (conditional && ([_conditionals member:object] == NULL)) {
             object=nil;
         }
 
         if (object == nil) {
             [self _appendWordFour:0];
-        } else if (NSHashGet(_objects, object) != NULL) {
+        } else if ([_objects member:object] != NULL) {
             [self _appendReference:object];
         } else { // FIX do replacementForCoder ?
             Class class = [object classForArchiver];
 
-            NSHashInsert(_objects, object);
+            [_objects addObject:object];
 
             [self _appendReference:object];
             [self _appendClassVersion:class];
@@ -420,7 +424,7 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    if(_position!=0)
     NSLog(@"_position=%d",_position);
 
-   if(NSHashGet(_conditionals,rootObject)==NULL)
+    if([_conditionals member:rootObject]==NULL)
     NSLog(@"rootObject not in conditionals");
 
    _position=0;

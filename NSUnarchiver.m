@@ -5,6 +5,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
+#import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #include <string.h>
 #import "NSUnarchiver.h"
@@ -106,30 +107,34 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    while((_position+length)<_length && (_bytes[_position+length]!='\0'))
     length++;
 
-   result=[NSString stringWithCString:(char *)(_bytes+_position) length:length];
+    result=[[[NSString alloc] initWithBytes:(char *)(_bytes+_position) length:length encoding:NSUTF8StringEncoding] autorelease];
    _position+=length+1;
 
    return result;
 }
 
 -(NSUInteger)_extractReference {
-   return (NSUInteger)[self _extractWordFour];
+#ifdef __LP64__
+    return (NSUInteger)[self _extractWordEight];
+#else
+    return (NSUInteger)[self _extractWordFour];
+#endif
 }
 
 -(NSString *)_extractCStringString {
    NSUInteger  ref=[self _extractReference];
-   NSString *result=NSMapGet(_cStrings,(void *)ref);
+    NSString *result = [_cStrings objectForKey:(void *)ref];
 
    if(result==nil){
-    result=[self _extractCStringBytes];
-    NSMapInsert(_cStrings,(void *)ref,result);
+     result=[self _extractCStringBytes];
+     [_cStrings setObject:result forKey:(void *)ref];
    }
 
    return result;
 }
 
 -(const char *)_extractCString {
-   return [[self _extractCStringString] cString];
+   return [[self _extractCStringString] UTF8String];
 }
 
 -(Class)_extractClass {
@@ -138,7 +143,7 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
    if(ref==0)
     return [NSObject class];
-   else if((result=NSMapGet(_classes,(void *)ref))!=Nil)
+   else if((result= [_classes objectForKey:(id)ref]) != nil)
     return result;
    else {
     NSString *className=[self _extractCStringString];
@@ -146,8 +151,8 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
     result=NSClassFromString(className);
 
-    NSMapInsert(_classes,(void *)ref,result);
-    NSMapInsert(_classVersions,className,(void *)version);
+    [_classes setObject:result forKey:(id)ref];
+    [_classVersions setObject:(id)version forKey:className];
 
     [self _extractClass];
 
@@ -161,17 +166,17 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
    if(ref==0)
     return nil;
-   else if((result=NSMapGet(_objects,(void *)ref))!=nil)
+    else if((result= [_objects objectForKey:(void *)ref])!=nil)
     [result retain];
    else{
     Class class=[self _extractClass];
 
     result=[class allocWithZone:NULL];
-    NSMapInsert(_objects,(void *)ref,result);
+    [_objects setObject:result forKey:(void *)ref];
     result=[result initWithCoder:self];
     result=[result awakeAfterUsingCoder:self];
 
-    NSMapInsert(_objects,(void *)ref,result);
+    [_objects setObject:result forKey:(void *)ref];
 
     [_allObjects addObject:result];
    }
@@ -268,8 +273,9 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
       char     **cString=addr;
       NSString *string=[self _extractCStringString];
 
-      *cString=NSZoneMalloc(NSDefaultMallocZone(),[string cStringLength]+1);
-      [string getCString:*cString];
+      unsigned long maxLen =strlen([string UTF8String])+1;
+      *cString=NSZoneMalloc(NSDefaultMallocZone(),maxLen);
+        [string getCString:*cString maxLength:maxLen encoding:NSUTF8StringEncoding];
      }
      break;
 
@@ -371,13 +377,13 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
 - (NSInteger)versionForClassName:(NSString *)className
 {
-    void *oKey, *oVal;
+    //void *oKey, *oVal;
 
-    if (!NSMapMember(_classVersions, className, &oKey, &oVal)) {
+    //if (!NSMapMember(_classVersions, className, &oKey, &oVal)) {
         //NSLog(@"no version for %@",className);
-    }
+    //}
 
-    return (NSInteger)NSMapGet(_classVersions, className);
+    return (NSInteger)[_classVersions objectForKey:className];
 }
 
 
