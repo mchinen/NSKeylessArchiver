@@ -8,23 +8,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #include <string.h>
-#import "NSUnarchiver.h"
+#import "NSKeylessUnarchiver.h"
 
 
 #define NSUnimplementedMethod() \
 NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
-@implementation NSUnarchiver
+@implementation NSKeylessUnarchiver
 
 -(void)cannotDecodeType:(const char *)type {
-   [NSException raise:@"NSUnarchiverCannotDecodeException"
-               format:@"NSUnarchiver cannot decode type=%s",type];
+   [NSException raise:@"NSKeylessUnarchiverCannotDecodeException"
+               format:@"NSKeylessUnarchiver cannot decode type=%s",type];
 }
 
 -(void)_ensureLength:(NSUInteger)length {
    if(_position+length>_length)
-    [NSException raise:@"NSUnarchiverBadArchiveException"
-                format:@"NSUnarchiver attempt to read beyond length"];
+    [NSException raise:@"NSKeylessUnarchiverBadArchiveException"
+                format:@"NSKeylessUnarchiver attempt to read beyond length"];
 }
 
 -(uint8_t)_extractWordOne {
@@ -218,8 +218,8 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    const char *checkType=[self _extractCString];
 
    if(strcmp(checkType,type)!=0)
-    [NSException raise:@"NSUnarchiverTypeMismatchException"
-                format:@"NSUnarchiver type mismatch decoding %s, contains %s",type,checkType];
+    [NSException raise:@"NSKeylessUnarchiverTypeMismatchException"
+                format:@"NSKeylessUnarchiver type mismatch decoding %s, contains %s",type,checkType];
 
    switch(*type){
     case 'c':
@@ -399,8 +399,8 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
    _version=[self _extractWordFour];
    if(_version>0)
-    [NSException raise:@"NSUnarchiverInvalidVersionException"
-                format:@"NSUnarchiver cannot unarchive version %d",_version];
+    [NSException raise:@"NSKeylessUnarchiverInvalidVersionException"
+                format:@"NSKeylessUnarchiver cannot unarchive version %d",_version];
 
    return NO;
 }
@@ -449,19 +449,19 @@ capacity:0];
 }
 
 +(id)unarchiveObjectWithData:(NSData *)data {
-   NSUnarchiver *unarchiver=[[[NSUnarchiver allocWithZone:NULL] initForReadingWithData:data] autorelease];
+   NSKeylessUnarchiver *unarchiver=[[[NSKeylessUnarchiver allocWithZone:NULL] initForReadingWithData:data] autorelease];
 
    return [unarchiver decodeObject];
 }
 
 +(id)unarchiveObjectWithFile:(NSString *)path {
    NSData       *data=[NSData dataWithContentsOfFile:path];
-   NSUnarchiver *unarchiver;
+   NSKeylessUnarchiver *unarchiver;
 
    if(data==nil)
     return nil;
 
-   unarchiver=[[[NSUnarchiver allocWithZone:NULL] initForReadingWithData:data] autorelease];
+   unarchiver=[[[NSKeylessUnarchiver allocWithZone:NULL] initForReadingWithData:data] autorelease];
 
    return [unarchiver decodeObject];
 }

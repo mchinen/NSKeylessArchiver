@@ -10,12 +10,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #import <Foundation/Foundation.h>
 #include <string.h>
 
-#import "NSArchiver.h"
+#import "NSKeylessArchiver.h"
 
 #define NSUnimplementedMethod() \
 NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
-@implementation NSArchiver
+@implementation NSKeylessArchiver
 
 -init {
    _data=[NSMutableData new];
@@ -48,7 +48,7 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 }
 
 +(NSData *)archivedDataWithRootObject:(id)rootObject {
-   NSArchiver *archiver=[[[self allocWithZone:NULL] init] autorelease];
+   NSKeylessArchiver *archiver=[[[self allocWithZone:NULL] init] autorelease];
 
    [archiver encodeRootObject:rootObject];
    return [archiver data];
@@ -65,8 +65,8 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 }
 
 -(void)cannotEncodeType:(const char *)type {
-   [NSException raise:@"NSArchiverCannotEncodeException"
-               format:@"NSArchiver cannot encode type=%s",type];
+   [NSException raise:@"NSKeylessArchiverCannotEncodeException"
+               format:@"NSKeylessArchiver cannot encode type=%s",type];
 }
 
 -(void)_ensureLength:(NSUInteger)length {
