@@ -5,12 +5,13 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
-#import <Foundation/NSUnarchiver.h>
-#import <Foundation/NSRaise.h>
-#import <Foundation/NSData.h>
-#import <Foundation/NSMutableArray.h>
-#import <Foundation/NSByteOrder.h>
+#import <Foundation/Foundation.h>
 #include <string.h>
+#import "NSUnarchiver.h"
+
+
+#define NSUnimplementedMethod() \
+NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
 @implementation NSUnarchiver
 
@@ -85,7 +86,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 -(float)_extractDataFloat {
    NSSwappedFloat swapped;
 
-   swapped.floatWord=[self _extractWordFour];
+   swapped.v=[self _extractWordFour];
 
    return NSConvertSwappedFloatToHost(swapped);
 }
@@ -93,7 +94,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 -(double)_extractDataDouble {
    NSSwappedDouble swapped;
 
-   swapped.doubleWord=[self _extractWordEight];
+   swapped.v=[self _extractWordEight];
 
    return NSConvertSwappedDoubleToHost(swapped);
 }
@@ -311,22 +312,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       value->length=[self _extractWordFour];
       break;
      }
-     if(strcmp(type,@encode(NSPoint))==0){
-      NSPoint *value=addr;
+     if(strcmp(type,@encode(CGPoint))==0){
+      CGPoint *value=addr;
 
       value->x=[self _extractDataFloat];
       value->y=[self _extractDataFloat];
       break;
      }
-     if(strcmp(type,@encode(NSSize))==0){
-      NSSize *value=addr;
+     if(strcmp(type,@encode(CGSize))==0){
+      CGSize *value=addr;
 
       value->width=[self _extractDataFloat];
       value->height=[self _extractDataFloat];
       break;
      }
-     if(strcmp(type,@encode(NSRect))==0){
-      NSRect *value=addr;
+     if(strcmp(type,@encode(CGRect))==0){
+      CGRect *value=addr;
 
       value->origin.x=[self _extractDataFloat];
       value->origin.y=[self _extractDataFloat];
@@ -406,13 +407,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
    _objectZone=NSDefaultMallocZone();
    _version=0;
-   _objects=NSCreateMapTable(NSIntMapKeyCallBacks,
-       NSNonRetainedObjectMapValueCallBacks,0);
-   _classes=NSCreateMapTable(NSIntMapKeyCallBacks,
-      NSNonRetainedObjectMapValueCallBacks,0);
-   _cStrings=NSCreateMapTable(NSIntMapKeyCallBacks,NSObjectMapValueCallBacks,0);
-   _classVersions=NSCreateMapTable(NSObjectMapKeyCallBacks,
-        NSIntMapValueCallBacks,0);
+    // NSCreateMapTable(NSIntMapKeyCallBacks, NSNonRetainedObjectMapValueCallBacks,0);
+   _objects= [[NSMapTable alloc] initWithKeyOptions:(NSPointerFunctionsIntegerPersonality | NSPointerFunctionsOpaqueMemory)
+                                      valueOptions:(NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPersonality)
+                                          capacity:0];
+    _classes= [[NSMapTable alloc] initWithKeyOptions:(NSPointerFunctionsIntegerPersonality | NSPointerFunctionsOpaqueMemory)
+valueOptions:(NSPointerFunctionsWeakMemory | NSPointerFunctionsObjectPersonality)
+capacity:0];
+    // NSCreateMapTable(NSIntMapKeyCallBacks,NSObjectMapValueCallBacks,0);
+    _cStrings= [[NSMapTable alloc] initWithKeyOptions:(NSPointerFunctionsIntegerPersonality | NSPointerFunctionsOpaqueMemory)
+valueOptions:(NSPointerFunctionsStrongMemory | NSPointerFunctionsObjectPersonality)
+capacity:0];
+    // NSCreateMapTable(NSObjectMapKeyCallBacks, NSIntMapValueCallBacks,0);
+    _classVersions= [[NSMapTable alloc] initWithKeyOptions:(NSPointerFunctionsStrongMemory | NSPointerFunctionsObjectPersonality)
+valueOptions:(NSPointerFunctionsIntegerPersonality | NSPointerFunctionsOpaqueMemory)
+capacity:0];
 
    _allObjects=[NSMutableArray new];
 
@@ -425,10 +434,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 -(void)dealloc {
    [_data release];
-   NSFreeMapTable(_objects);
-   NSFreeMapTable(_classes);
-   NSFreeMapTable(_cStrings);
-   NSFreeMapTable(_classVersions);
+   [_objects release];
+   [_classes release];
+   [_cStrings release];
+   [_classVersions release];
    [_allObjects release];
    [super dealloc];
 }

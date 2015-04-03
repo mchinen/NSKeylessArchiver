@@ -5,12 +5,12 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
-#import <Foundation/NSArchiver.h>
-#import <Foundation/NSRaise.h>
-#import <Foundation/NSMutableData.h>
-#import <Foundation/NSMutableDictionary.h>
-#import <Foundation/NSByteOrder.h>
+#import "NSArchiver.h"
+#import <Foundation/Foundation.h>
 #include <string.h>
+
+#define NSUnimplementedMethod() \
+NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
 @implementation NSArchiver
 
@@ -20,20 +20,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    _position=0;
    _pass=0;
 
-   _conditionals=NSCreateHashTable(NSNonOwnedPointerHashCallBacks,0);
-   _objects=NSCreateHashTable(NSNonOwnedPointerHashCallBacks,0);
-   _classes=NSCreateHashTable(NSNonOwnedPointerHashCallBacks,0);
-   _cStrings=NSCreateHashTable(NSObjectHashCallBacks,0);
+    // was NSCreateHashTable(NSNonOwnedPointerHashCallBacks,0)
+    _conditionals = [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
+   _objects= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
+   _classes= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
 
+    // was NSCreateHashTable(NSObjectHashCallBacks,0);
+    _cStrings= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsStrongMemory capacity:0];
+    
    return self;
 }
 
 -(void)dealloc {
    [_data release];
-   NSFreeHashTable(_conditionals);
-   NSFreeHashTable(_objects);
-   NSFreeHashTable(_classes);
-   NSFreeHashTable(_cStrings);
+   [_conditionals release];
+   [_objects release];
+   [_classes release];
+   [_cStrings release];
    [super dealloc];
 }
 
@@ -106,7 +109,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 }
 
 -(void)_appendFloat:(float)value {
-   [self _appendWordFour:NSConvertHostFloatToSwapped(value).floatWord];
+   [self _appendWordFour:NSConvertHostFloatToSwapped(value).v];
 }
 
 -(void)_appendWordEight:(uint64_t)value {
@@ -315,7 +318,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     case 'd':{
       double value=*(const double *)addr;
-      [self _appendWordEight:NSConvertHostDoubleToSwapped(value).doubleWord];
+      [self _appendWordEight:NSConvertHostDoubleToSwapped(value).v];
      }
      break;
 
@@ -364,22 +367,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       [self _appendWordFour:value.length];
       break;
      }
-     if(strcmp(type,@encode(NSPoint))==0){
-      NSPoint value=*(const NSPoint *)addr;
+     if(strcmp(type,@encode(CGPoint))==0){
+      CGPoint value=*(const CGPoint *)addr;
 
       [self _appendFloat:value.x];
       [self _appendFloat:value.y];
       break;
      }
-     if(strcmp(type,@encode(NSSize))==0){
-      NSSize value=*(const NSSize *)addr;
+     if(strcmp(type,@encode(CGSize))==0){
+      CGSize value=*(const CGSize *)addr;
 
       [self _appendFloat:value.width];
       [self _appendFloat:value.height];
       break;
      }
-     if(strcmp(type,@encode(NSRect))==0){
-      NSRect value=*(const NSRect *)addr;
+     if(strcmp(type,@encode(CGRect))==0){
+      CGRect value=*(const CGRect *)addr;
 
       [self _appendFloat:value.origin.x];
       [self _appendFloat:value.origin.y];
