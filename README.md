@@ -17,8 +17,8 @@ For a test case, I compared NSKeyedArchiver, NSKeylessArchiver, and NSArchiver w
 
 |             | NSKeyedArchiver   | NSKeylessArchiver | NSArchiver |
 |-------------|:-----------------:|:-----------------:|:----------:|
-|encoding (s) | 2.722656          | 0.025590          | 0.003826   |
-|decoding (s) | 2.659569          | 0.009438          | 0.000927   |
+|encoding (s) | 0.066511          | 0.017343          | 0.002930   |
+|decoding (s) | 2.621774          | 0.012389          | 0.000891   |
 
 
 As you can see the performance for this unrealistic use case shows NSKeylessArchiver doing much better than NSKeyedArchiver, but worse than NSArchiver.  NSArchiver is a better choice, but apps that use it may not pass iOS app review due to the private API status.  If you know otherwise, let me know.
