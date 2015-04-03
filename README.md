@@ -12,11 +12,14 @@ If you store a version number, you can still add and remove new objects/data, an
 ## Performance
 First of, if fast-as-possible performance is your goal, you might consider something else, such as directly writing to a binary file.  This is a trade off for having the convenience of having a drop-in replacement for compliant uses of NSKeyedArchiver.
 
-For a test case, I compared NSKeyedArchiver, NSKeylessArchiver, and NSArchiver with a simple root object with 20000 ints.  Please feel free modify the [test repo](https://github.com/mchinen/NSArchiverPerformance) and this class to improve performance and correctness.  This was the typical result:
+For a test case, I compared NSKeyedArchiver, NSKeylessArchiver, and NSArchiver with a simple root object with 20000 ints.  Please feel free modify the [test repo](https://github.com/mchinen/NSArchiverPerformance) and this class to improve performance and correctness.  This was the typical result with bad testing over 20 iterations (I only ran in debug, on the simulator so far for this test, more to come, if I keep looking at it):
 
-`NSKeylessArchiver encoding time 0.025590 decoding time 0.009438`
-`NSArchiver encoding time 0.003826 decoding time 0.000927`
-`NSKeyedArchiver encoding time 2.722656 decoding time 2.659569`
+
+|             | NSKeyedArchiver   | NSKeylessArchiver | NSArchiver |
+|-------------|:-----------------:|:-----------------:|:----------:|
+|encoding (s) | 2.722656          | 0.025590          | 0.003826   |
+|decoding (s) | 2.659569          | 0.009438          | 0.000927   |
+
 
 As you can see the performance for this unrealistic use case shows NSKeylessArchiver doing much better than NSKeyedArchiver, but worse than NSArchiver.  NSArchiver is a better choice, but apps that use it may not pass iOS app review due to the private API status.  If you know otherwise, let me know.
 
