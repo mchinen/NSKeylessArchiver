@@ -21,12 +21,12 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    _pass=0;
 
     // was NSCreateHashTable(NSNonOwnedPointerHashCallBacks,0)
-    _conditionals = [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
-   _objects= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
-   _classes= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsWeakMemory capacity:0];
+    _conditionals = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory|NSPointerFunctionsObjectPointerPersonality capacity:0];
+   _objects= [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory|NSPointerFunctionsObjectPointerPersonality capacity:0];
+   _classes= [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory|NSPointerFunctionsObjectPointerPersonality capacity:0];
 
     // was NSCreateHashTable(NSObjectHashCallBacks,0);
-    _cStrings= [[NSHashTable alloc] initWithPointerFunctions:NSPointerFunctionsStrongMemory capacity:0];
+    _cStrings= [[NSHashTable alloc] initWithOptions:NSPointerFunctionsStrongMemory|NSPointerFunctionsObjectPointerPersonality capacity:0];
     
    return self;
 }
