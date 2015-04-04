@@ -1,6 +1,11 @@
 # NSKeylessArchiver-iOS
 Cocotron-based NSArchiver to provide faster encoding than NSKeyed*chiver when keys are not needed
 
+## How to use
+Add NSKeylessArchiver and NSKeylessUnarchiver's .h and .m files to your project.  If you have an arc project, you will need to go into the "Build Phases" tab of your project settings and add the '-fno-objc-arc' flag to both NSKeylessArchiver.m and NSKeylessUnarchiver.m.
+
+Then, just #import "NSKeylessArchiver.h" and use it like an NSCoder.  See the performance test project below for a sample.
+
 ## When to use
 If you have a moderate to large use case for NSKeyedArchiver that does not rely on keys (e.g. uses only -[NSCoder encodeObject:] and -[NSCoder encodeObjectOfObjcType: at:] as opposed to -[NSCoder encodeObject: forKey:]), then you may be able to use this.  The keyed based encoding and decoding is much slower, because it allows for random access.  The non-keyed method allows a faster linear, forward-only read and write because it requires the order of encoding and decoding to be fixed.  Mac OS X has a deprecated NSArchiver/NSUnarchiver, and iOS has this, but is not a public API.
 
