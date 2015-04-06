@@ -1,5 +1,6 @@
 # NSKeylessArchiver-iOS
-Cocotron-based NSArchiver to provide faster encoding than NSKeyed*chiver when keys are not needed
+Michael Chinen
+Cocotron-based NSArchiver to provide faster encoding than NSKeyed*chiver when keys are not needed.  Cocotron version was old and did not compile for iOS.
 
 ## How to use
 Add NSKeylessArchiver and NSKeylessUnarchiver's .h and .m files to your project.  If you have an arc project, you will need to go into the "Build Phases" tab of your project settings and add the '-fno-objc-arc' flag to both NSKeylessArchiver.m and NSKeylessUnarchiver.m.
