@@ -17,13 +17,15 @@ If you store a version number, you can still add and remove new objects/data, an
 ## Performance
 First of, if fast-as-possible performance is your goal, you might consider something else, such as directly writing to a binary file.  This is a trade off for having the convenience of having a drop-in replacement for compliant uses of NSKeyedArchiver.
 
-For a test case, I compared NSKeyedArchiver, NSKeylessArchiver, and NSArchiver with a simple root object with 20000 ints.  Please feel free modify the [test repo](https://github.com/mchinen/NSArchiverPerformance) and this class to improve performance and correctness.  This was the typical result with bad testing over 20 iterations (I only ran in debug, on the simulator so far for this test, more to come, if I keep looking at it):
+For a test case, I compared NSKeyedArchiver, NSKeylessArchiver, and NSArchiver with a simple root object with 20000 ints.  Please feel free modify the [test repo](https://github.com/mchinen/NSArchiverPerformance) and this class to improve performance and correctness.  This was the result of running a release build on an iPhone 5S, with 10 runs per class:
 
 
-|             | NSKeyedArchiver   | NSKeylessArchiver | NSArchiver |
-|-------------|:-----------------:|:-----------------:|:----------:|
-|encoding (s) | 0.066511          | 0.017343          | 0.002930   |
-|decoding (s) | 2.621774          | 0.012389          | 0.000891   |
+|                 |encoding (min/max/avg secs)|decoding (min/max/avg secs)|
+|-----------------|:-------------------------:|:-------------------------:|
+|NSKeyedArchiver  |  0.2048/0.2453/0.2165     |  6.8919/6.9238/6.9037|
+|NSKeylessArchiver|  0.0407/0.0506/0.0451     |  0.0253/0.0330/0.0287|
+|NSArchiver       |  0.0094/0.0114/0.0102     |  0.0019/0.0025/0.0020|
+
 
 
 As you can see the performance for this unrealistic use case shows NSKeylessArchiver doing much better than NSKeyedArchiver, but worse than NSArchiver.  NSArchiver is a better choice, but apps that use it may not pass iOS app review due to the private API status.  If you know otherwise, let me know.
