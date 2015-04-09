@@ -9,9 +9,10 @@ Then, just #import "NSKeylessArchiver.h" and use it like an NSCoder.  See the pe
 ## When to use
 If you have a moderate to large use case for NSKeyedArchiver that does not rely on keys (e.g. uses only -[NSCoder encodeObject:] and -[NSCoder encodeObjectOfObjcType: at:] as opposed to -[NSCoder encodeObject: forKey:]), then you may be able to use this.  The keyed based encoding and decoding is much slower, because it allows for random access.  The non-keyed method allows a faster linear, forward-only read and write because it requires the order of encoding and decoding to be fixed.  Mac OS X has a deprecated NSArchiver/NSUnarchiver, and iOS has this, but is not a public API.
 
-## How do I get backward-compatibility without keys?
+## How do I get backward-compatibility without keys?  Forward-compatibility?
 A frequent cited advantage of NSKeyedArchiver is that the keys provide easy backward-compatibility.   It certainly helps, but of course, backward compatibility can exist without keys.
 If you store a version number, you can still add and remove new objects/data, and check the version number on load to determine whether or not to decode or not.  If this is not clear I will expand on it later.
+Forward-compatibility via keys is much harder, but in the 'save user data' case, you may not need it.  It is possible to implement schema for forward-compatibility with NSCoder, but in my opinion it is too messy, and remnicent of file formats that specify a byte length of each component and subcomponent, in which case you should just write your own binary file.
 
 
 ## Performance
