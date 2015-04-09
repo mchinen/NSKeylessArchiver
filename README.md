@@ -12,7 +12,8 @@ If you have a moderate to large use case for NSKeyedArchiver that does not rely 
 ## How do I get backward-compatibility without keys?  Forward-compatibility?
 A frequent cited advantage of NSKeyedArchiver is that the keys provide easy backward-compatibility.   It certainly helps, but of course, backward compatibility can exist without keys.
 If you store a version number, you can still add and remove new objects/data, and check the version number on load to determine whether or not to decode or not.  If this is not clear I will expand on it later.
-Forward-compatibility via keys is much harder, but in the 'save user data' case, you may not need it.  It is possible to implement schema for forward-compatibility with NSCoder, but in my opinion it is too messy, and remnicent of file formats that specify a byte length of each component and subcomponent, in which case you should just write your own binary file.
+Forward-compatibility via keys is much harder, but in the 'save user data' case, you may not need it - the only way that you will need to load a file from a future version is for cloud-based methods.
+If you do need it, it is possible to implement schema for forward-compatibility with NSKeylessArchiver, by using keys implicitly in an NSDictionary (which you should be able to use with NSKeylessArchiver!).  The other options are probably too messy, and likely remnicent of file formats that specify a byte length of each component and subcomponent, in which case you should just write your own binary file.
 
 
 ## Performance
