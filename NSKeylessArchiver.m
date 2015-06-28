@@ -417,6 +417,8 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    [self cannotEncodeType:"encodeDataObject"];
 }
 
+#define NSKEYLESSARCHIVER_VERSION (1)
+
 -(void)encodeRootObject:(id)rootObject {
    _position=0;
    _pass=0;
@@ -430,7 +432,16 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
    _position=0;
    _pass=1;
    [self _appendCStringBytes:"~V1~"];
-   [self _appendWordFour:0]; // archive version
+   [self _appendWordFour:NSKEYLESSARCHIVER_VERSION]; // archive version
+    
+   /* NSKEYLESSARCHIVER_VERSION >= 1 */
+#ifdef __LP64__
+   [self _appendWordFour:1]; // LP64 encoded
+#else
+   [self _appendWordFour:0]; // not LP64 encoded
+#endif
+   
+ 
 
    [self _appendCString:"@"];
    [self _appendObject:rootObject conditional: NO];

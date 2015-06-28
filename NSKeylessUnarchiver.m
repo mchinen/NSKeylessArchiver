@@ -114,11 +114,13 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 }
 
 -(NSUInteger)_extractReference {
-#ifdef __LP64__
-    return (NSUInteger)[self _extractWordEight];
-#else
-    return (NSUInteger)[self _extractWordFour];
-#endif
+    //To keep this backwards compatible with previous 32 bit archives,
+    // we need to check which machine wrote it.
+    if (_archiveIs64Bit) {
+        return (NSUInteger)[self _extractWordEight];
+    } else {
+        return (NSUInteger)[self _extractWordFour];
+    }
 }
 
 -(NSString *)_extractCStringString {
@@ -217,9 +219,19 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 -(void)decodeValueOfObjCType:(const char *)type at:(void *)addr {
    const char *checkType=[self _extractCString];
 
-   if(strcmp(checkType,type)!=0)
-    [NSException raise:@"NSKeylessUnarchiverTypeMismatchException"
-                format:@"NSKeylessUnarchiver type mismatch decoding %s, contains %s",type,checkType];
+  if(strcmp(checkType,type)!=0) {
+#ifdef __LP64__
+      if (!_archiveIs64Bit && !strcmp(checkType, "L") && !strcmp(type, "Q")) {
+            // promote archived long to long long
+      
+      } else
+#endif
+      {
+          [NSException raise:@"NSKeylessUnarchiverTypeMismatchException"
+                      format:@"NSKeylessUnarchiver type mismatch decoding %s, contains %s",type,checkType];
+      }
+      
+  }
 
    switch(*type){
     case 'c':
@@ -245,15 +257,26 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
 
     case 'l':
     case 'L':{
-      unsigned long *value=addr;
-      *value=[self _extractWordFour];
+        {
+            unsigned long *value=addr;
+            *value=[self _extractWordFour];
+        }
      }
      break;
 
     case 'q':
     case 'Q':{
-      unsigned long long *value=addr;
-      *value=[self _extractWordEight];
+#ifdef __LP64__
+        // promote if migrating (TODO refactor into dict and do others including 'l')
+        if (*checkType == 'L' || *checkType == 'l') {
+            unsigned long long *value=addr;
+            *value=[self _extractWordFour];
+        } else
+#endif
+        {
+            unsigned long long *value=addr;
+            *value=[self _extractWordEight];
+        }
      }
      break;
 
@@ -386,7 +409,7 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
     return (NSInteger)[_classVersions objectForKey:className];
 }
 
-
+// this processes the header and returns YES if invalid
 -(BOOL)invalidHeader {
    NSString *label;
 
@@ -398,10 +421,18 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
     return YES;
 
    _version=[self _extractWordFour];
-   if(_version>0)
-    [NSException raise:@"NSKeylessUnarchiverInvalidVersionException"
-                format:@"NSKeylessUnarchiver cannot unarchive version %d",_version];
-
+   // default to 32 bit
+   _archiveIs64Bit = 0;
+   if (_version >= 1) {
+       /* NSKEYLESSARCHIVER_VERSION >= 1 */
+       _archiveIs64Bit = [self _extractWordFour];
+   }
+    
+   if (_version > 1) {
+       [NSException raise:@"NSKeylessUnarchiverInvalidVersionException"
+                   format:@"NSKeylessUnarchiver cannot unarchive version %d",_version];
+   }
+    
    return NO;
 }
 
