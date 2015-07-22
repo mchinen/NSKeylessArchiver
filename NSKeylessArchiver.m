@@ -436,8 +436,11 @@ NSLog(@"Method %s is not implemented!", __FUNCTION__)
     
    /* NSKEYLESSARCHIVER_VERSION >= 1 */
 #ifdef __LP64__
+    NSLog(@"encoding 64 bit");
    [self _appendWordFour:1]; // LP64 encoded
 #else
+    
+    NSLog(@"encoding 32 bit");
    [self _appendWordFour:0]; // not LP64 encoded
 #endif
    
